@@ -1,7 +1,7 @@
 // Sum Finance PWA - App Logic
 // Config - UPDATE THESE with your Supabase credentials
-const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://pdtzlljvtbcdqdpbqnqsy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_jr4vWRsnh1qLNKlPr5ur8w_H-YGwl_B';
 
 // Initialize Supabase
 let supabase;
