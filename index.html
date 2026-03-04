@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2c3e50">
+    <title>Sum 財務助手</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang HK', sans-serif;
+            background: #f5f5f5;
+            padding-bottom: 80px;
+        }
+        
+        /* Header */
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        /* Stats Cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 16px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card h3 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* Month Selector */
+        .month-bar {
+            background: white;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .month-bar select {
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            background: transparent;
+            padding: 8px 0;
+        }
+        
+        /* Expense List */
+        .expenses-list {
+            padding: 8px 16px;
+        }
+        
+        .expense-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .expense-thumb {
+            width: 60px;
+            height: 80px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .expense-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .expense-info {
+            flex: 1;
+        }
+        
+        .expense-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+        
+        .type-dining { background: #fff3cd; color: #856404; }
+        .type-parking { background: #d1ecf1; color: #0c5460; }
+        .type-equipment { background: #d4edda; color: #155724; }
+        .type-supplies { background: #f8d7da; color: #721c24; }
+        .type-travel { background: #e2e3e5; color: #383d41; }
+        .type-other { background: #d6d8db; color: #1b1e21; }
+        
+        .expense-merchant {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .expense-date {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .expense-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+            align-self: center;
+        }
+        
+        /* Scan Button */
+        .scan-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(44,62,80,0.4);
+            cursor: pointer;
+        }
+        
+        .scan-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+        
+        /* Camera Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: black;
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #camera-preview {
+            flex: 1;
+            object-fit: cover;
+        }
+        
+        .camera-controls {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .camera-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 4px solid white;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .camera-btn.capture {
+            background: #e74c3c;
+        }
+        
+        .camera-btn.cancel {
+            background: transparent;
+            border-color: white;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* OCR Preview */
+        .ocr-preview {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 1001;
+            flex-direction: column;
+        }
+        
+        .ocr-preview.active {
+            display: flex;
+        }
+        
+        .ocr-image {
+            max-height: 40vh;
+            object-fit: contain;
+            margin: 16px auto;
+        }
+        
+        .ocr-form {
+            padding: 16px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-actions {
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        /* Loading */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .loading.active {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>📊 Sum 財務助手</h1>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-card">
+            <h3>本月開支</h3>
+            <div class="amount" id="month-total">$0</div>
+        </div>
+        <div class="stat-card">
+            <h3>單據總數</h3>
+            <div class="amount" id="receipt-count">0</div>
+        </div>
+    </div>
+    
+    <!-- Month Selector -->
+    <div class="month-bar">
+        <select id="month-select">
+            <option value="current">本月</option>
+        </select>
+        <span id="receipt-count-label">0 張單據</span>
+    </div>
+    
+    <!-- Expenses List -->
+    <div class="expenses-list" id="expenses-list">
+        <div class="empty-state">
+            <div class="icon">🧾</div>
+            <p>暫時冇單據</p>
+            <p style="font-size: 12px; margin-top: 8px;">撳下面按鈕掃描</p>
+        </div>
+    </div>
+    
+    <!-- Scan Button -->
+    <button class="scan-btn" onclick="openCamera()">
+        📷 掃描單據
+    </button>
+    
+    <!-- Camera Modal -->
+    <div class="modal" id="camera-modal">
+        <video id="camera-preview" autoplay playsinline></video>
+        <div class="camera-controls">
+            <button class="camera-btn cancel" onclick="closeCamera()">取消</button>
+            <button class="camera-btn capture" onclick="capturePhoto()"></button>
+        </div>
+    </div>
+    
+    <!-- OCR Preview -->
+    <div class="ocr-preview" id="ocr-preview">
+        <img class="ocr-image" id="ocr-image" src="" alt="Receipt">
+        <div class="ocr-form">
+            <div class="form-group">
+                <label>商舖名稱</label>
+                <input type="text" id="merchant-input" placeholder="例如：茶餐廳">
+            </div>
+            <div class="form-group">
+                <label>金額 (HK$)</label>
+                <input type="number" id="amount-input" placeholder="例如：50">
+            </div>
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" id="date-input">
+            </div>
+            <div class="form-group">
+                <label>類型</label>
+                <select id="type-input">
+                    <option value="dining">飲食</option>
+                    <option value="parking">停車場</option>
+                    <option value="equipment">器材</option>
+                    <option value="supplies">用品</option>
+                    <option value="travel">交通</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>項目 (可選)</label>
+                <input type="text" id="job-input" placeholder="例如：Steph Song project">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-secondary" onclick="cancelOCR()">取消</button>
+            <button class="btn btn-primary" onclick="saveReceipt()">儲存</button>
+        </div>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>處理緊...</p>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>
