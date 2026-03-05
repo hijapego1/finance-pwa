@@ -155,6 +155,36 @@
             align-self: center;
         }
         
+        /* Top-right Camera Button (固定右上角，唔會消失) */
+        .top-camera-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(231,76,60,0.4);
+            cursor: pointer;
+            z-index: 9999;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .top-camera-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(231,76,60,0.5);
+        }
+        
+        .top-camera-btn:active {
+            transform: scale(0.95);
+        }
+        
         /* Scan Button */
         .scan-btn {
             position: fixed;
@@ -387,6 +417,11 @@
             <p style="font-size: 12px; margin-top: 8px;">撳下面按鈕掃描</p>
         </div>
     </div>
+    
+    <!-- Top-right Camera Button (固定右上角) -->
+    <button class="top-camera-btn" onclick="openCamera()">
+        📷
+    </button>
     
     <!-- Scan Button -->
     <button class="scan-btn" onclick="openCamera()">
